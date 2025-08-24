@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Happy Birthday, Sister!</title>
+
+<!-- Fonts & Libraries -->
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+
+<style>
+:root{
+  --pink:#ff4d88; --hot:#ff2e63; --bg:#111; --white:#fff;
+}
+*{margin:0;padding:0;box-sizing:border-box;font-family:Poppins, sans-serif;}
+body{background:var(--bg);color:var(--white);overflow-x:hidden;}
+
+header{display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:50px 20px;}
+h1{font-family:'Pacifico', cursive;font-size:3rem;text-shadow:0 0 10px #ff4d88,0 0 20px #ff2e63;}
+p.subtitle{margin:15px 0;font-size:1.2rem;color:#ffb6c1;}
+button{margin:10px;padding:12px 25px;border:none;border-radius:30px;background:var(--hot);color:#fff;font-weight:600;cursor:pointer;transition:.3s;}
+button:hover{transform:scale(1.1);background:#ff69b4;}
+
+#slideshow{width:90%;max-width:900px;height:500px;margin:20px auto;position:relative;overflow:hidden;border-radius:20px;box-shadow:0 0 30px #000;}
+#slideshow img{width:100%;height:100%;object-fit:cover;position:absolute;opacity:0;transition:opacity 1.5s;}
+#slideshow img.active{opacity:1;}
+
+.ticker{width:90%;max-width:900px;margin:20px auto;overflow:hidden;border:1px solid #fff3;padding:10px;border-radius:30px;}
+.track{display:flex;gap:30px;white-space:nowrap;animation:scroll 25s linear infinite;}
+.wish{padding:8px 14px;background:rgba(255,20,147,0.2);border-radius:999px;font-size:.95rem;}
+@keyframes scroll{from{transform:translateX(0);}to{transform:translateX(-50%);}}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;width:90%;max-width:1000px;margin:20px auto;}
+.grid img{width:100%;height:180px;object-fit:cover;border-radius:15px;cursor:pointer;transition:.3s;}
+.grid img:hover{transform:scale(1.05);}
+
+.lightbox{position:fixed;inset:0;background:rgba(0,0,0,0.9);display:none;align-items:center;justify-content:center;z-index:10;}
+.lightbox.open{display:flex;}
+.lightbox img{max-width:90vw;max-height:85vh;border-radius:15px;}
+
+.cake-wrap{margin:30px auto;text-align:center;}
+.cake{position:relative;width:220px;height:150px;margin:auto;}
+.body{width:180px;height:100px;background:linear-gradient(#ff96b9,#ff6f9f);border-radius:15px;margin:auto;position:relative;top:50px;}
+.candles{display:flex;justify-content:center;gap:15px;position:relative;top:-60px;}
+.candle{width:10px;height:50px;background:#fff;border-radius:5px;position:relative;}
+.wick{position:absolute;top:-10px;left:50%;transform:translateX(-50%);width:2px;height:10px;background:#333;}
+.flame{position:absolute;top:-20px;left:50%;transform:translateX(-50%);width:10px;height:15px;background:radial-gradient(circle,#fff,#ffd166,#ff5e62);border-radius:50%;animation:flicker .2s infinite alternate;}
+.flame.off{opacity:0;animation:none;}
+@keyframes flicker{from{transform:translateX(-50%) translateY(-1px) scale(1);}to{transform:translateX(-50%) translateY(1px) scale(1.1);}}
+
+footer{text-align:center;padding:30px;color:#aaa;font-size:.9rem;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Happy Birthday, Sister! 🎉</h1>
+  <p class="subtitle" id="typed"></p>
+  <div>
+    <button id="musicBtn">Play Music</button>
+    <button id="surpriseBtn">Open Surprise</button>
+  </div>
+  <div class="ticker">
+    <div class="track" id="tickerTrack"></div>
+  </div>
+</header>
+
+<div id="slideshow"></div>
+<section class="grid" id="grid"></section>
+
+<div class="cake-wrap">
+  <h2>Blow the candles!</h2>
+  <div class="cake">
+    <div class="body"></div>
+    <div class="candles">
+      <div class="candle"><div class="wick"></div><div class="flame" id="f1"></div></div>
+      <div class="candle"><div class="wick"></div><div class="flame" id="f2"></div></div>
+      <div class="candle"><div class="wick"></div><div class="flame" id="f3"></div></div>
+      <div class="candle"><div class="wick"></div><div class="flame" id="f4"></div></div>
+      <div class="candle"><div class="wick"></div><div class="flame" id="f5"></div></div>
+    </div>
+  </div>
+  <button id="micBtn">Start Mic</button>
+  <button id="relightBtn" style="display:none;">Relight Candles</button>
+</div>
+
+<div id="lightbox" class="lightbox"><img id="lightImg" alt="Memory"/></div>
+
+<div id="modal" class="lightbox">
+  <div style="background:#222;padding:20px;border-radius:20px;max-width:400px;text-align:center;">
+    <h2>🎁 Surprise!</h2>
+    <p>Dear sister, you’re the best hacker & the one and only. I love you!</p>
+    <button onclick="document.getElementById('modal').classList.remove('open')">Close</button>
+  </div>
+</div>
+
+<audio id="bgm" loop>
+  <source src="Happy-Birthday-To-You-Ji.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+const TYPED_LINES=["Another year older, wiser & cooler.","May your days be bright as your smile!","Let's make more memories!"];
+let line=0,pos=0;
+const typedEl=document.getElementById('typed');
+function typeLoop(){if(line<TYPED_LINES.length){const curr=TYPED_LINES[line];if(pos<=curr.length){typedEl.textContent=curr.slice(0,pos++);setTimeout(typeLoop,50);}else{setTimeout(()=>{pos=0;line++;typeLoop();},900);}}}
+typeLoop();
+
+// Slideshow
+const PHOTOS = Array.from({length:54},(_,i)=>`i (${i+1}).jpg`);
+const slideHost=document.getElementById('slideshow');
+PHOTOS.forEach((src,i)=>{const img=new Image(); img.src=src; if(i==0) img.classList.add('active'); slideHost.appendChild(img);});
+let cur=0; setInterval(()=>{const imgs=slideHost.querySelectorAll('img'); imgs[cur].classList.remove('active'); cur=(cur+1)%imgs.length; imgs[cur].classList.add('active');},3500);
+
+// Wishes ticker
+const WISHES=["Mom: Proud of you always!","Dad: Keep shining!","Brother: Always with you!","Bestie: The kindest soul!","Cousin: More trips soon!"];
+const track=document.getElementById('tickerTrack');
+function renderWishes(){WISHES.forEach(w=>{const div=document.createElement('div');div.className='wish';div.textContent=w;track.appendChild(div);}); WISHES.forEach(w=>{const div=document.createElement('div');div.className='wish';div.textContent=w;track.appendChild(div);});}
+renderWishes();
+
+// Gallery
+const grid=document.getElementById('grid');
+PHOTOS.forEach((src,i)=>{const img=new Image(); img.src=src; img.alt=`Memory ${i+1}`; img.addEventListener('click',()=>{document.getElementById('lightImg').src=src; document.getElementById('lightbox').classList.add('open');}); grid.appendChild(img);});
+document.getElementById('lightbox').addEventListener('click',()=>document.getElementById('lightbox').classList.remove('open'));
+
+// Music
+const bgm=document.getElementById('bgm'); let musicOn=false;
+document.getElementById('musicBtn').addEventListener('click',async()=>{if(!musicOn){await bgm.play(); musicOn=true;}else{bgm.pause();musicOn=false;}});
+
+// Surprise modal
+document.getElementById('surpriseBtn').addEventListener('click',()=>document.getElementById('modal').classList.add('open'));
+
+// Candle mic
+const micBtn=document.getElementById('micBtn'); const relightBtn=document.getElementById('relightBtn'); 
+const flames=["f1","f2","f3","f4","f5"].map(id=>document.getElementById(id));
+let stream,ctx,analyser,data,rafId,blown=false;
+async function startMic(){try{stream=await navigator.mediaDevices.getUserMedia({audio:true}); ctx=new (window.AudioContext||window.webkitAudioContext)(); const src=ctx.createMediaStreamSource(stream); analyser=ctx.createAnalyser(); analyser.fftSize=2048; data=new Uint8Array(analyser.fftSize); src.connect(analyser); micBtn.textContent="Stop Mic"; listen();}catch(e){alert("Mic denied");}}
+function stopMic(){if(stream){stream.getTracks().forEach(t=>t.stop());} if(ctx){ctx.close();} cancelAnimationFrame(rafId); micBtn.textContent="Start Mic";}
+function avgVol(){analyser.getByteTimeDomainData(data);let sum=0; for(let i=0;i<data.length;i++){let v=(data[i]-128)/128; sum+=v*v;} return Math.sqrt(sum/data.length);}
+function listen(){const THRESH=0.07,HOLD=400; let overSince=null; function loop(){const vol=avgVol(); if(vol>THRESH){if(!overSince) overSince=Date.now(); else if(Date.now()-overSince>HOLD && !blown){flames.forEach(f=>f.classList.add('off')); confetti({particleCount:150,spread:90,origin:{y:0.6}}); blown=true; relightBtn.style.display="inline-block";}} else overSince=null; rafId=requestAnimationFrame(loop);} loop();}
+micBtn.addEventListener('click',()=>{if(!stream) startMic(); else stopMic();});
+relightBtn.addEventListener('click',()=>{flames.forEach(f=>f.classList.remove('off')); blown=false; relightBtn.style.display="none";});
+</script>
+<footer>Made with ❤️ for my sister</footer>
+</body>
+</html>
